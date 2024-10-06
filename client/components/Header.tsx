@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,16 +19,30 @@ import { Badge } from "@/components/ui/badge";
 import { useAppSelector, useAppDispatch, RootState } from "@/store/store";
 import Cookies from "js-cookie";
 import { clearUser } from "@/store/slices/userSlice";
+import useCart from "@/hooks/useCart";
+import { setItemCount } from "@/store/slices/cartSlice";
 
 export default function Header() {
   const user = useAppSelector((state: RootState) => state.user);
+  const cartcount = useAppSelector((state: RootState) => state.cart.itemCount);
   const router = useRouter();
   const dispatch = useAppDispatch();
+
+  const { getCount } = useCart();
 
   const pathname = usePathname();
   const isActive = (basePath: string) => {
     return pathname === basePath || pathname.startsWith(basePath + "/");
   };
+
+  React.useEffect(() => {
+    const getCartItems = async () => {
+      const response = await getCount();
+      dispatch(setItemCount(response));
+    };
+
+    getCartItems();
+  }, [])
 
   const home = pathname === "/";
   const products = pathname === "/shops/products" || isActive("/product");
@@ -39,35 +52,11 @@ export default function Header() {
     Cookies.remove("accessToken");
     Cookies.remove("refreshToken");
     dispatch(clearUser());
-    router.push("/sign-in");
+    window.location.href = "/sign-in";
   };
 
   return (
     <React.Fragment>
-      <div className="overflow-hidden bg-[#f5f5dc] py-[10px]">
-        <div className="marquee whitespace-nowrap text-[16px] text-center">
-          ¡Promos todos los fines de semana! 25% de descuento en productos
-          seleccionados
-        </div>
-      </div>
-      <style jsx>
-        {`
-        .marquee {
-          display: inline-block;
-          padding-left: 30%;
-          animation: marquee 15s linear infinite;
-        }
-
-        @keyframes marquee {
-          0% {
-            transform: translateX(100%);
-          }
-          100% {
-            transform: translateX(-100%);
-          }
-        }
-      `}
-      </style>
       <div className="flex justify-between items-center container mx-auto px-2">
         <DrawerMenu />
         <div className="flex items-center gap-8">
@@ -77,7 +66,7 @@ export default function Header() {
         {/* Mobile */}
         <div className="lg:hidden flex">
           <Button
-            onClick={() => router.push("/cart")}
+            onClick={() => window.location.href = "/cart"}
             size="icon"
             className="rounded-full bg-[transparent] hover:bg-[transparent] outline-none relative"
           >
@@ -85,7 +74,7 @@ export default function Header() {
               variant="outline"
               className="absolute flex items-center justify-center rounded-full top-0 -mt-1.5 -mr-1 right-0 w-[16px] text-white bg-red-500 border-none"
             >
-              <span className="text-xs">0</span>
+              <span className="text-xs">{cartcount}</span>
             </Badge>
             <HiOutlineShoppingBag className="text-gray-900 text-[20px]" />
           </Button>
@@ -94,21 +83,21 @@ export default function Header() {
         <ul className="items-center gap-8 font-weight-500 hidden lg:flex">
           <li>
             <Button variant="link"
-              onClick={() => router.push("/")}
+              onClick={() => window.location.href = "/"}
               className={`hover:no-underline hover:border-none hover:bg-slate-100 ${home ? "bg-slate-100" : ""}`}>
               Inicio
             </Button>
           </li>
           <li>
             <Button variant="link"
-              onClick={() => router.push("/shops/products")}
+              onClick={() => window.location.href = "/shops/products"}
               className={`hover:no-underline hover:border-none hover:bg-slate-100 ${products ? "bg-slate-100" : ""}`}>
               Productos
             </Button>
           </li>
           <li>
             <Button variant="link"
-              onClick={() => router.push("/find-us")}
+              onClick={() => window.location.href = "/find-us"}
               className={`hover:no-underline hover:border-none hover:bg-slate-100 ${findUs ? "bg-slate-100" : ""}`}>
               Encuentranos
             </Button>
@@ -118,7 +107,7 @@ export default function Header() {
         <div className="lg:flex items-center gap-4 hidden">
           {!user.username ? (
             <Button
-              onClick={() => router.push("/sign-in")}
+              onClick={() => window.location.href = "/sign-in"}
               className="px-6"
             >
               Login
@@ -141,16 +130,12 @@ export default function Header() {
                     <DropdownMenuItem>
                       <div className="flex items-center">
                         <MdDashboard className="mr-2" />
-                        <Link href="/dashboard">Administrar</Link>
+                        <span onClick={() => window.location.href = "/dashboard/categories"}>Administrar</span>
                       </div>
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem>
-                      <div className="flex items-center">
-                        <MdAccountBox className="mr-2" />
-                        <Link href="/my-account">Mi cuenta</Link>
-                      </div>
-                    </DropdownMenuItem>
+                    <>
+                    </>
                   )}
                   <DropdownMenuItem>
                     <div className="flex items-center" onClick={logout}>
@@ -164,7 +149,7 @@ export default function Header() {
           )}
 
           <Button
-            onClick={() => router.push("/cart")}
+            onClick={() => window.location.href = "/cart"}
             size="icon"
             className="relative rounded-full bg-[transparent] hover:bg-[transparent] outline-none shadow-none"
           >
@@ -172,12 +157,37 @@ export default function Header() {
               variant="outline"
               className="absolute flex items-center justify-center rounded-full top-0 -mt-1.5 -mr-1 right-0 w-[16px] text-white bg-red-500 border-none"
             >
-              <span className="text-xs">0</span>
+              <span className="text-xs">{cartcount}</span>
             </Badge>
             <HiOutlineShoppingBag className="text-gray-900 text-[20px]" />
           </Button>
         </div>
       </div>
-    </React.Fragment>
+
+      <div className="overflow-hidden bg-[#f5f5dc] py-[10px] mb-[20px]">
+        <div className="marquee whitespace-nowrap text-[16px] text-center">
+          ¡Promos todos los fines de semana! 25% de descuento en productos
+          seleccionados
+        </div>
+      </div>
+      <style jsx>
+        {`
+          .marquee {
+            display: inline-block;
+            padding-left: 30%;
+            animation: marquee 15s linear infinite;
+          }
+
+          @keyframes marquee {
+            0% {
+              transform: translateX(100%);
+            }
+            100% {
+              transform: translateX(-100%);
+            }
+          }
+        `}
+      </style>
+    </React.Fragment >
   );
 };

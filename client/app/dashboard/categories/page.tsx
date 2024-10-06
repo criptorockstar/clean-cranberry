@@ -1,45 +1,19 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation";
-import {
-  CaretSortIcon,
-  DotsHorizontalIcon,
-} from "@radix-ui/react-icons"
+import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@tanstack/react-table";
 import {
-  PlusCircle,
-} from "lucide-react"
-
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+  DotsHorizontalIcon,
+} from "@radix-ui/react-icons"
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -47,169 +21,227 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { useAppSelector, useAppDispatch, RootState } from "@/store/store";
+} from "@/components/ui/table";
 import useCategories from "@/hooks/useCategories";
-import { setCategories } from "@/store/slices/categorySlice";
+import {
+  PlusCircle,
+} from "lucide-react"
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import useAdmin from "@/hooks/useAdmin";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
-export type Category = {
-  id: number
-  image: string
-  name: string
-  slug: string
-};
-
-const columns: ColumnDef<Category>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "image",
-    header: "Imagen",
-    cell: ({ row }) => (
-      <div className="table-cell">
-        <img
-          alt="Imagen categoria"
-          className="aspect-square rounded-md object-cover"
-          height="64"
-          src={row.getValue("image")}
-          width="64"
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nombre
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase ml-4">{row.getValue("name")}</div>,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const category = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem>Borrar</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
+interface Category {
+  id: number;
+  name: string;
+  image: string;
+  slug: string;
+}
 
 export default function Categories() {
-  const { fetchCategories } = useCategories();
+  const { getPaginatedCategories, categories, totalPages } = useCategories();
+  const { deleteCategory } = useAdmin();
 
-  const categories = useAppSelector((state: RootState) => state.categories)
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const dispatch = useAppDispatch();
+  const pageFromURL = searchParams.get("page")
+  const initialPageIndex = pageFromURL ? parseInt(pageFromURL) - 1 : 0;
+  const [pageIndex, setPageIndex] = React.useState<number>(initialPageIndex);
+  const [pageSize, setPageSize] = React.useState<number>(10);
+
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
+
+  const { toast } = useToast();
+
+  const [deleteCategoryId, setDeleteCategoryId] = React.useState<number | null>(null);
+  const [isAlertDialogOpen, setAlertDialogOpen] = React.useState(false);
+  const handleDeleteCategory = async () => {
+    if (deleteCategoryId !== null) {
+      try {
+        await deleteCategory(deleteCategoryId);
+        toast({
+          variant: "success",
+          description: "Categoría eliminada con éxito",
+        });
+        setAlertDialogOpen(false);
+      } catch (error) {
+        console.error("Error al eliminar la categoría:", error);
+        setAlertDialogOpen(false);
+      }
+    }
+  };
+
+  const openAlertDialog = (id: number) => {
+    setDeleteCategoryId(id);
+    setAlertDialogOpen(true);
+  };
+
   React.useEffect(() => {
     loadCategories();
-  }, []);
+  }, [searchTerm, pageIndex]);
+
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams();
+    if (searchTerm) searchParams.set("search", searchTerm);
+    router.push(`/dashboard/categories?page=${pageIndex + 1}&${searchParams.toString()}`);
+  }, [searchTerm, pageIndex]);
 
   const loadCategories = async () => {
     try {
-      const response = await fetchCategories(1, 100);
-      dispatch(setCategories({
-        categories: response.categories,
-        currentPage: response.currentPage,
-        totalPages: response.totalPages,
-      }));
+
+      await getPaginatedCategories(pageIndex + 1, pageSize, searchTerm);
     } catch (error) {
       console.error("Error loading categories:", error);
     }
   };
 
+  const columns: ColumnDef<Category>[] = [
+    {
+      accessorKey: "image",
+      header: "Imagen",
+      cell: ({ row }) => (
+        <div className="table-cell">
+          <img
+            alt="Imagen categoria"
+            className="aspect-square rounded-md object-cover"
+            height="64"
+            src={row.getValue("image")}
+            width="64"
+          />
+        </div>
+      ),
+    },
+    {
+      accessorKey: "name",
+      header: "Nombre",
+      cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const category = row.original
 
-  const router = useRouter();
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/categories/edit/${category.slug}`}>
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openAlertDialog(category.id)}>
+                Borrar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ];
 
-  const data = categories.categories;
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
+
   const table = useReactTable({
-    data,
+    data: categories || [],
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    pageCount: -1,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    manualPagination: true,
     state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
       rowSelection,
+      pagination: { pageIndex, pageSize },
+    },
+    onPaginationChange: (updater) => {
+      const newPaginationState =
+        typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      handlePageChange(newPaginationState.pageIndex);
+      setPageSize(newPaginationState.pageSize);
     },
   });
 
   return (
     <div className="flex flex-col">
-      <main className="grid flex-1 items-start gap-2 p-2 sm:px-6 sm:py-0 md:gap-6 lg:-mt-4">
-        {/* tables */}
+      <AlertDialog open={isAlertDialogOpen} onOpenChange={setAlertDialogOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de que deseas eliminar esta categoría?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La categoría se eliminará permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setAlertDialogOpen(false)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCategory}>Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Categorias</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <main className="grid flex-1 items-start gap-2 p-2 sm:px-6 sm:py-0 md:gap-6">
         <div className="w-full">
           <div className="flex justify-between flex-col-reverse lg:flex-row">
             <div className="flex items-center py-4 flex-grow">
               <Input
                 placeholder="Filtra por nombre..."
-                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                }
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  // Updates search term
+                  table.getColumn("name")?.setFilterValue(event.target.value);
+                }}
                 className="w-full lg:max-w-sm"
               />
             </div>
             {/*col*/}
             <div className="flex items-center">
               <div className="ml-auto flex items-center gap-2">
-                <Button size="sm" className="h-7 gap-1" onClick={() => router.push("/dashboard/categories/add")}>
+                <Button size="sm" className="h-7 gap-1" onClick={() => window.location.href = "/dashboard/categories/add"}>
                   <PlusCircle className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Agregar categoria
@@ -223,45 +255,34 @@ export default function Categories() {
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        </TableHead>
-                      )
-                    })}
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows?.length ? (
+                {table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
+                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No hay resultados.
+                    <TableCell colSpan={columns.length} className="text-center">
+                      No se encontraron categorías.
                     </TableCell>
                   </TableRow>
                 )}
@@ -286,7 +307,7 @@ export default function Categories() {
                 variant="outline"
                 size="sm"
                 onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                disabled={pageIndex + 1 >= totalPages}
               >
                 Siguiente
               </Button>
@@ -296,4 +317,4 @@ export default function Categories() {
       </main>
     </div>
   );
-};
+}

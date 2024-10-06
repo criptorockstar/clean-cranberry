@@ -37,3 +37,64 @@ export const uploadImage = async (file: File) => {
   });
   return response.data;
 };
+
+// UPLOAD IMAGE
+export const uploadCategoryImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const response = await axios.post("/files/upload-category", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return response.data;
+};
+
+// DELETE IMAGE
+export const deleteImage = async (fileName: string) => {
+  const response = await axios.delete(`/files/delete/${fileName}`);
+  return response.data;
+};
+
+// CREATE PRODUCT
+export const createProduct = async (
+  name: string,
+  description: string,
+  quantity: string,
+  stock: number,
+  images: string[],
+  price: number,
+  offer: number,
+  colors: string[],
+  sizes: string[],
+  categories: string[],
+  featured: boolean,
+) => {
+  const response = await axios.post(`/products`, {
+    name,
+    description,
+    quantity,
+    stock,
+    images,
+    price,
+    offer,
+    colors,
+    sizes,
+    categories,
+    featured,
+  });
+  return response.data;
+};
+
+// UPDATE PRODUCT
+export const updateProduct = async (id: number, data: any) => {
+  const response = await axios.put(`/products/${id}`, data);
+  return response.data;
+};
+
+// DELETE PRODUCT
+export const deleteProduct = async (id: number) => {
+  const response = await axios.delete(`/products/${id}`);
+  return response.data;
+};

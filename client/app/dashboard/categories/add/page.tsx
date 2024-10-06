@@ -8,10 +8,19 @@ import { Form, FormField, FormItem, FormMessage, FormControl } from "@/component
 import { Input } from "@/components/input";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { uploadImage } from "@/services/admin";
+import { uploadCategoryImage } from "@/services/admin";
 import { FaUpload } from 'react-icons/fa';
+import { Trash2 } from "lucide-react";
 import useAdmin from "@/hooks/useAdmin";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 
 interface CategoryFormValues {
   name: string;
@@ -40,20 +49,18 @@ export default function AddCategory() {
   });
 
   const router = useRouter();
-
   const { handleSubmit, setError, control } = form;
-
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const { createCategory } = useAdmin();
+  const { toast } = useToast();
 
-  const { createCategory, loading } = useAdmin();
-
-  // IMAGE UPLOAD
+  // IMAGEN CARGADA
   const onImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const selectedFile = e.target.files[0];
 
     try {
-      const response = await uploadImage(selectedFile);
+      const response = await uploadCategoryImage(selectedFile);
       const url = response.url;
       form.setValue("image", url);
       setImageUrl(url);
@@ -64,11 +71,16 @@ export default function AddCategory() {
       });
     }
   };
-  const { toast } = useToast();
+
+  // Función para eliminar la imagen cargada
+  const removeImage = () => {
+    setImageUrl(null);
+    form.setValue("image", ""); // Limpia el campo de la imagen en el formulario
+  };
+
   const onSubmit: SubmitHandler<CategoryFormValues> = async (data) => {
     try {
-      const response = await createCategory(data.name, data.image);
-      console.log(response)
+      await createCategory(data.name, data.image);
       toast({
         variant: "success",
         description: "Categoria agregada con exito",
@@ -76,9 +88,9 @@ export default function AddCategory() {
 
       setTimeout(() => {
         router.push("/dashboard/categories");
-      }, 100)
+      }, 100);
     } catch (error: any) {
-      console.log(error)
+      console.log(error);
       if (error.response && error.response.data.errors) {
         const serverErrors = error.response.data.errors as Record<string, string>;
         for (const [field, message] of Object.entries(serverErrors)) {
@@ -95,6 +107,23 @@ export default function AddCategory() {
 
   return (
     <React.Fragment>
+      <div>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard/categories">Categorias</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Agregar</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
       <Form {...form}>
         <form
           onSubmit={handleSubmit(onSubmit)}
@@ -119,9 +148,21 @@ export default function AddCategory() {
             )}
           />
 
-          {/* Input para la imagen */}
+          {/* Mostrar imagen o input para cargar */}
           {imageUrl ? (
-            <img src={imageUrl} alt="Preview" className="object-cover w-full h-32 border-2 border-gray-300 rounded-md" />
+            <div className="flex gap-4 mt-4">
+              <div className="relative">
+                <img src={imageUrl} alt="Preview" className="object-cover w-32 h-32 border-2 border-gray-300 rounded-md" />
+                <Button
+                  type="button"
+                  size="icon"
+                  onClick={removeImage}
+                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white"
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+            </div>
           ) : (
             <FormField
               control={control}
@@ -131,8 +172,8 @@ export default function AddCategory() {
                   <FormControl>
                     <label className={`flex items-center justify-center w-full h-32 border-2 ${fieldState.error ? "border-red-500" : "border-gray-300"} border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors duration-200`}>
                       <div className="text-gray-500 flex flex-col items-center justify-center w-full h-full">
-                        <span className="text-center">Arrastra y suelta una imagen aquí o haz clic para seleccionar</span>
-                        <FaUpload className="mt-2 text-xl" />
+                        <FaUpload className="text-2xl" />
+                        <span className="text-center mt-2">Arrastra y suelta una imagen aquí o haz clic para seleccionar</span>
                       </div>
                       <input
                         type="file"
@@ -148,7 +189,6 @@ export default function AddCategory() {
             />
           )}
 
-          {/* Botón de enviar */}
           <Button type="submit" className="self-start">
             Crear Categoría
           </Button>

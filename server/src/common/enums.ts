@@ -10,5 +10,5 @@ export enum Quantities {
 
 export enum OrderStatus {
   PENDING = 'Pendiente',
-  PAID = 'pagado',
+  PAID = 'Pagado',
 }

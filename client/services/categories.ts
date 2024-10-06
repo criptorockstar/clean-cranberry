@@ -1,23 +1,27 @@
-import { createAxiosInstance } from "../axiosConfig";
+import { useAxiosInstance } from "../axiosConfig";
 
-const axios = createAxiosInstance();
+const axios = useAxiosInstance();
 
-// GET CATEGORIES
-export const getCategoriesService = async (
-  page: number = 1,
-  limit: number = 10,
-) => {
-  const response = await axios.get("/categories", {
-    params: { page, limit },
-  });
-
+// GET ALL CATEGORIES
+export const getAllCategoriesService = async () => {
+  const response = await axios.get(`/categories`);
   return response.data;
 };
 
-// SEARCH CATEGORY BY NAME
-export const searchCategoryService = async (name: string) => {
-  const response = await axios.get("/categories/search", {
-    params: { name },
+// GET CATEGORY BY SLUG
+export const getCategoryService = async (slug: string) => {
+  const response = await axios.get(`/categories/slug/${slug}`);
+  return response.data;
+};
+
+// GET PAGINATED CATEGORIES WITH SEARCH AND SORTING
+export const getPaginatedCategoriesService = async (
+  page: number,
+  limit: number,
+  name?: string,
+) => {
+  const response = await axios.get("/categories/paginated", {
+    params: { page, limit, name },
   });
   return response.data;
 };

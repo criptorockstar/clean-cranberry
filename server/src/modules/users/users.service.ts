@@ -9,18 +9,61 @@ import { hash, compare } from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserEntity } from './entities/user.entity';
+import { ShippingEntity } from './entities/shipping.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthenticateUserDto } from './dto/authenticate-user.dto';
 import { PasswordRecoveryDto } from './dto/password-recovery.dto';
+import { SetShippingDto } from './dto/set-shipping.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    @InjectRepository(ShippingEntity)
+    private readonly shippingRepository: Repository<ShippingEntity>,
     private readonly mailerService: MailerService,
   ) {}
+
+  // SET SHIPPING
+  async setShipping(
+    userId: number,
+    setShippingDto: SetShippingDto,
+  ): Promise<ShippingEntity> {
+    let shipping = await this.shippingRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!shipping) {
+      // Create a new shipping entry if it doesn't exist
+      shipping = this.shippingRepository.create({
+        ...setShippingDto,
+        user: { id: userId },
+      });
+    } else {
+      // Update existing shipping entry
+      Object.assign(shipping, setShippingDto);
+    }
+
+    await this.shippingRepository.save(shipping);
+    return shipping;
+  }
+
+  // GET SHIPPING
+  async getShipping(userId: number): Promise<ShippingEntity> {
+    const shipping = await this.shippingRepository.findOne({
+      where: { user: { id: userId } },
+    });
+
+    if (!shipping) {
+      throw new NotFoundException(
+        '* No shipping information found for the user',
+      );
+    }
+
+    return shipping;
+  }
 
   // GET USER BY ID
   async findOne(id: number): Promise<UserEntity> {

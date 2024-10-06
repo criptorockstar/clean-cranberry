@@ -16,8 +16,8 @@ import Cookies from "js-cookie";
 import { clearUser } from "@/store/slices/userSlice";
 
 export default function DrawerMenu() {
+  const [isOpen, setIsOpen] = React.useState(false);
   const user = useAppSelector((state: RootState) => state.user);
-
   const dispatch = useAppDispatch();
   const pathname = usePathname();
   const router = useRouter();
@@ -35,14 +35,21 @@ export default function DrawerMenu() {
     Cookies.remove("refreshToken");
     dispatch(clearUser());
     router.push("/sign-in");
+    setIsOpen(false); // Cierra el Drawer al cerrar sesión
+  };
+
+  // Navegación y cierre del Drawer
+  const handleNavigation = (path: string) => {
+    window.location.href = path;
+    setIsOpen(false); // Cierra el Drawer tras hacer clic
   };
 
   return (
     <React.Fragment>
       <div className="lg:hidden">
-        <Drawer direction="left">
+        <Drawer direction="left" open={isOpen} onClose={() => setIsOpen(false)}>
           <DrawerTrigger asChild>
-            <div className="cursor-pointer">
+            <div className="cursor-pointer" onClick={() => setIsOpen(true)}>
               <HiMenu className="text-[20px] text-[#188df9]" />
             </div>
           </DrawerTrigger>
@@ -55,7 +62,7 @@ export default function DrawerMenu() {
 
             <ul className="flex-1 px-3">
               <li
-                onClick={() => router.push("/")}
+                onClick={() => handleNavigation("/")}
                 className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${home ? "bg-slate-100" : ""}`}
               >
                 <div className="flex items-center w-full">
@@ -64,7 +71,7 @@ export default function DrawerMenu() {
               </li>
 
               <li
-                onClick={() => router.push("/shops/products")}
+                onClick={() => handleNavigation("/shops/products")}
                 className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${products ? "bg-slate-100" : ""}`}
               >
                 <div className="flex items-center w-full">
@@ -73,7 +80,7 @@ export default function DrawerMenu() {
               </li>
 
               <li
-                onClick={() => router.push("/find-us")}
+                onClick={() => handleNavigation("/find-us")}
                 className={`relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${findUs ? "bg-slate-100" : ""}`}
               >
                 <div className="flex items-center w-full">
@@ -95,30 +102,21 @@ export default function DrawerMenu() {
                     <AccordionItem value="item-1">
                       <AccordionTrigger className="w-full">
                         <div className="flex items-center w-full">
-                          <HiOutlineUser className="text-gray-900 w-[18px] focus-visible:ring-0 shadow-none outline-none hover:bg-[transparent] bg-[transparent]" />
+                          <HiOutlineUser className="text-gray-900 w-[18px]" />
                           <span className="text-[16px] ml-2">Cuenta</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="w-full">
                         <ul>
-                          {user.role === "Admin" ? (
+                          {user.role === "Admin" && (
                             <li
-                              onClick={() => router.push("/dashboard")}
+                              onClick={() => handleNavigation("/dashboard/categories")}
                               className={`relative flex items-center py-2 px-3 font-medium hover:bg-slate-100 rounded-md cursor-pointer transition-colors w-full`}>
                               <div className="flex items-center">
                                 <MdDashboard className="mr-2" />
                                 <span>Administrar</span>
                               </div>
-                            </li>) : (
-                            <li
-                              onClick={() => router.push("/my-account")}
-                              className={`relative flex items-center py-2 px-3 font-medium hover:bg-slate-100 rounded-md cursor-pointer transition-colors w-full`}>
-                              <div className="flex items-center">
-                                <MdAccountBox className="mr-2" />
-                                <span>Mi cuenta</span>
-                              </div>
-                            </li>
-                          )}
+                            </li>)}
                           <li
                             onClick={logout}
                             className={`relative flex items-center py-2 px-3 font-medium hover:bg-slate-100 rounded-md cursor-pointer transition-colors w-full`}>

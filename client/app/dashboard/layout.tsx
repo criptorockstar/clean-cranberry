@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
 import {
   HomeIcon,
@@ -13,18 +14,17 @@ import { FaStore, FaWhatsapp } from "react-icons/fa";
 import { useAppSelector, useAppDispatch, RootState } from "@/store/store";
 import Cookies from "js-cookie";
 import { clearUser } from "@/store/slices/userSlice";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import * as Dialog from '@radix-ui/react-dialog';
 
 export default function DashboardLayout({ children }: any) {
   const user = useAppSelector((state: RootState) => state.user);
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
 
   const logout = () => {
     Cookies.remove("accessToken");
@@ -35,11 +35,42 @@ export default function DashboardLayout({ children }: any) {
 
   const renderNavLinks = () => {
     const navItems = [
-      { href: "/dashboard", label: "Dashboard", icon: <HomeIcon className="h-4 w-4" aria-hidden="true" /> },
-      { href: "/dashboard/categories", label: "Categorías", icon: <HiTag className="h-4 w-4" aria-hidden="true" />, active: true },
-      { href: "/dashboard/products", label: "Productos", icon: <Package className="h-4 w-4" aria-hidden="true" /> },
-      { href: "/dashboard/orders", label: "Pedidos", icon: <ShoppingCart className="h-4 w-4" aria-hidden="true" /> },
-      { href: "/dashboard/whatsapp", label: "WhatsApp", icon: <FaWhatsapp className="h-4 w-4" aria-hidden="true" /> },
+      {
+        href: "/dashboard/categories",
+        label: "Categorías",
+        icon: <HiTag
+          className="h-4 w-4"
+          aria-hidden="true"
+        />,
+        active: pathname === "/dashboard/categories"
+      },
+      {
+        href: "/dashboard/products",
+        label: "Productos",
+        icon: <Package
+          className="h-4 w-4"
+          aria-hidden="true"
+        />,
+        active: pathname === "/dashboard/products"
+      },
+      {
+        href: "/dashboard/orders",
+        label: "Pedidos",
+        icon: <ShoppingCart
+          className="h-4 w-4"
+          aria-hidden="true"
+        />,
+        active: pathname === "/dashboard/orders"
+      },
+      {
+        href: "/dashboard/whatsapp",
+        label: "WhatsApp",
+        icon: <FaWhatsapp
+          className="h-4 w-4"
+          aria-hidden="true"
+        />,
+        active: pathname === "/dashboard/whatsapp"
+      },
       { href: "/", label: "Ir a la tienda", icon: <FaStore className="h-4 w-4" aria-hidden="true" /> },
     ];
 

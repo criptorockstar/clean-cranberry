@@ -1,36 +1,65 @@
-import * as React from "react";
-import { Input as ShadcnInput } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { LucidePlus, LucideMinus } from "lucide-react";
-import { HiFingerPrint, HiAtSymbol, HiOutlineUser, HiOutlineSearch } from "react-icons/hi";
+"use client";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  error?: string;
-  className?: string;
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { LucideMinus, LucidePlus } from "lucide-react";
+import { Input as ShadcnInput } from "@/components/ui/input";
+import { HiFingerPrint, HiAtSymbol, HiOutlineUser } from "react-icons/hi";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  error?: boolean;
   numeric?: boolean;
-  type?: string;
   username?: boolean;
+  type?: string;
+  className?: string;
   search?: boolean;
+  onIncrease?: () => void;
+  onDecrease?: () => void;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ error, numeric = false, className, type = "text", username = false, search = false, ...props }, ref) => {
+  (
+    { error, numeric = false, className, type = "text", username = false, search = false, value, onChange, onIncrease, onDecrease, ...props },
+    ref
+  ) => {
+    const [numericValue, setNumericValue] = React.useState<number>(Number(value) || 1);
     const [showPassword, setShowPassword] = React.useState(false);
-    const [numericValue, setNumericValue] = React.useState<number>(1);
 
     const toggleShowPassword = () => {
       setShowPassword((prev) => !prev);
     };
 
-    // Increment and Decrement Handlers for numeric input
-    const increment = () => setNumericValue((prev) => prev + 1);
-    const decrement = () => setNumericValue((prev) => (prev > 1 ? prev - 1 : prev));
+    React.useEffect(() => {
+      setNumericValue(Number(value));
+    }, [value]);
+
+    const increment = () => {
+      const newValue = numericValue + 1;
+      setNumericValue(newValue);
+      if (onChange) {
+        const syntheticEvent = { target: { value: String(newValue) } } as React.ChangeEvent<HTMLInputElement>;
+        onChange(syntheticEvent);
+      }
+      if (onIncrease) onIncrease(); // Llama a la función de incremento
+    };
+
+    const decrement = () => {
+      if (numericValue > 1) {
+        const newValue = numericValue - 1;
+        setNumericValue(newValue);
+        if (onChange) {
+          const syntheticEvent = { target: { value: String(newValue) } } as React.ChangeEvent<HTMLInputElement>;
+          onChange(syntheticEvent);
+        }
+        if (onDecrease) onDecrease();
+      }
+    };
 
     return (
       <div className="relative">
         {numeric ? (
           <div className="flex items-center">
-            {/* Decrement Button */}
+            {/* Botón para decrementar */}
             <div
               onClick={decrement}
               className="absolute inset-y-0 left-0 flex items-center pl-3 cursor-pointer"
@@ -39,20 +68,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               <LucideMinus className="w-4 h-4" />
             </div>
 
-            {/* Numeric Input */}
+            {/* Input numérico */}
             <ShadcnInput
               type="text"
-              className={cn(
-                "h-11 w-full text-center border-l-0 border-r-0 border border-black px-10",
-                className
-              )}
+              className={cn("h-11 w-full text-center border-l-0 border-r-0 border border-black px-10", className)}
               value={numericValue}
-              onChange={(e) => setNumericValue(Number(e.target.value))}
+              onChange={(e) => {
+                setNumericValue(Number(e.target.value));
+                if (onChange) onChange(e); // Propagación del cambio manual
+              }}
               ref={ref}
               {...props}
             />
 
-            {/* Increment Button */}
+            {/* Botón para incrementar */}
             <div
               onClick={increment}
               className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
@@ -63,19 +92,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </div>
         ) : (
           <>
-            {/* Regular or Password Input */}
+            {/* Input regular o de contraseña */}
             <ShadcnInput
               type={type === "password" && !showPassword ? "password" : "text"}
               className={cn(
-                "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground placeholder:select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-                { 'pr-9': type === "password" || type === "email" || username || search },  // Padding derecho extra
-                className,
+                "block w-full h-11 border border-black px-3",
+                username ? "" : "",
+                search ? "pl-10" : "",
+                error ? "border-red-500" : "",
+                className
               )}
+              value={value}
+              onChange={onChange}
               ref={ref}
               {...props}
             />
 
-            {/* Toggle Password Visibility */}
+            {/* Icono para cambiar visibilidad de la contraseña */}
             {type === "password" && (
               <div
                 className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer"
@@ -90,7 +123,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               </div>
             )}
 
-            {/* Email */}
+            {/* Icono para email */}
             {type === "email" && (
               <div
                 className="absolute inset-y-0 right-0 flex items-center pr-3"
@@ -100,23 +133,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               </div>
             )}
 
-            {/* Username */}
+            {/* Icono para username */}
             {username && (
               <div
                 className="absolute inset-y-0 right-0 flex items-center pr-3"
                 style={{ top: "50%", transform: "translateY(-50%)" }}
               >
                 <HiOutlineUser className="text-muted-foreground" />
-              </div>
-            )}
-
-            {/* Search */}
-            {search && (
-              <div
-                className="absolute inset-y-0 right-0 flex items-center pr-3"
-                style={{ top: "50%", transform: "translateY(-50%)" }}
-              >
-                <HiOutlineSearch className="text-muted-foreground" />
               </div>
             )}
           </>

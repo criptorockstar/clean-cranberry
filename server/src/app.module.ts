@@ -17,6 +17,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { FileModule } from './file.module';
+import { SeedersModule } from '../db/seeders.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { FileModule } from './file.module';
     CartModule,
     OrdersModule,
     FileModule,
+    SeedersModule,
   ],
   controllers: [AppController],
   providers: [

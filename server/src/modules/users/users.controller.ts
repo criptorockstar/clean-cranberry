@@ -24,6 +24,8 @@ import { AuthenticateUserDto } from './dto/authenticate-user.dto';
 import { PasswordRecoveryDto } from './dto/password-recovery.dto';
 import { VerifyResetPasswordTokenDto } from './dto/verify-reset.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
+import { SetShippingDto } from './dto/set-shipping.dto';
+import { ShippingEntity } from './entities/shipping.entity';
 
 @Controller('users')
 export class UsersController {
@@ -151,6 +153,27 @@ export class UsersController {
     await this.usersService.deleteAccount(currentUser.id);
     return { message: 'Usuario eliminado exitosamente' };
   }
+
+  // SET SHIPPING
+  @UseGuards(AuthenticationGuard)
+  @Post('/shipping')
+  async setShipping(
+    @CurrentUser() currentUser: UserEntity,
+    @Body() setShippingDto: SetShippingDto,
+  ) {
+    return this.usersService.setShipping(currentUser.id, setShippingDto);
+  }
+
+  // GET SHIPPING
+  @UseGuards(AuthenticationGuard)
+  @Get('/shipping')
+  async getShipping(
+    @CurrentUser() currentUser: UserEntity,
+  ): Promise<ShippingEntity> {
+    return this.usersService.getShipping(currentUser.id);
+  }
+
+  // UPDATE SHIPPING DATA
 
   // ## ADMIN ## //
 

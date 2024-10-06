@@ -1,54 +1,20 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation";
-import {
-  CaretSortIcon,
-  ChevronDownIcon,
-  DotsHorizontalIcon,
-} from "@radix-ui/react-icons"
+import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table"
-
-import { Checkbox } from "@/components/ui/checkbox"
-import Link from "next/link"
+} from "@tanstack/react-table";
 import {
-  File,
-  Home,
-  LineChart,
-  ListFilter,
-  MoreHorizontal,
-  Package,
-  Package2,
-  PanelLeft,
-  PlusCircle,
-  Search,
-  Settings,
-  ShoppingCart,
-  Users2,
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
+  DotsHorizontalIcon,
+} from "@radix-ui/react-icons"
+import { useMediaQuery } from "@/components/use-media-query";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -56,209 +22,233 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import useOrder from "@/hooks/useOrder";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { useAppDispatch } from "@/store/store";
+import { setOrderStatus } from "@/store/slices/orderSlice";
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    image: "",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-  },
-  {
-    id: "3u1reuv4",
-    image: "",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-  },
-  {
-    id: "derv1ws0",
-    image: "",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-  },
-  {
-    id: "5kma53ae",
-    image: "",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-  },
-  {
-    id: "bhqecj4p",
-    image: "",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
-  },
-]
-
-export type Payment = {
-  id: string
-  image: string
-  amount: number
-  status: "pending" | "processing" | "success" | "failed"
-  email: string
+export interface IOrder {
+  id: number;
+  orderNumber: string;
+  total: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  shippingAddress: {
+    id: number;
+    address: string;
+    door: string | null;
+    zip: string;
+    phone: string;
+  };
+  items: Array<{}>;
+  user: {
+    id: number;
+  };
 }
 
-const columns: ColumnDef<Payment>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "image",
-    header: "Producto",
-    cell: ({ row }) => (
-      <div className="table-cell">
-        <img
-          alt="Product image"
-          className="aspect-square rounded-md object-cover"
-          height="64"
-          src={row.getValue("imagen")}
-          width="64"
-        />
-      </div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
+export interface IUser {
+  id: number;
+  username: string;
+  email: string;
+  reset_password_token: string | null;
+  roles: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount)
-
-      return <div className="text-right font-medium">{formatted}</div>
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const payment = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
+export interface IOrderState {
+  orders: IOrder[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export default function Orders() {
-  const router = useRouter();
+  const { getPaginatedOrders, orders, totalPages, updateOrder } = useOrder();
 
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+
+  const [columnVisibility, setColumnVisibility] = React.useState({
+    total: true,
+    user: true,
+  });
+
+  const isMobile = useMediaQuery('(max-width: 1200px)');
+  React.useEffect(() => {
+    if (isMobile) {
+      setColumnVisibility({
+        total: false,
+        user: false,
+      });
+    } else {
+      setColumnVisibility({
+        total: true,
+        user: true,
+      });
+    }
+  }, [isMobile]);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const pageFromURL = searchParams.get("page")
+  const initialPageIndex = pageFromURL ? parseInt(pageFromURL) - 1 : 0;
+  const [pageIndex, setPageIndex] = React.useState<number>(initialPageIndex);
+  const [pageSize, setPageSize] = React.useState<number>(10);
+
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
+  const [searchTerm, setSearchTerm] = React.useState<string>("");
+
+  React.useEffect(() => {
+    loadOrders();
+  }, [searchTerm, pageIndex]);
+
+  React.useEffect(() => {
+    const searchParams = new URLSearchParams();
+    if (searchTerm) searchParams.set("search", searchTerm);
+    router.push(`/dashboard/orders?page=${pageIndex + 1}&${searchParams.toString()}`);
+  }, [searchTerm, pageIndex]);
+
+  const loadOrders = async () => {
+    try {
+      await getPaginatedOrders(pageIndex + 1, pageSize, searchTerm);
+    } catch (error) {
+      console.error("Error loading orders:", error);
+    }
+  };
+
+  const dispatch = useAppDispatch();
+  const updateStatus = async (id: number, data: any) => {
+    await updateOrder(id, data)
+    dispatch(setOrderStatus({ id: id, status: data }));
+  }
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: "user",
+      header: "Nombre",
+      cell: ({ row }) => <div className="lowercase">{row.original.user.username}</div>,
+    },
+    {
+      accessorKey: "total",
+      header: "Precio",
+      cell: ({ row }) => <div className="lowercase">${row.original.total}</div>,
+    },
+    {
+      accessorKey: "orderNumber",
+      header: "Código de seguimiento",
+      cell: ({ row }) => <div className="lowercase">{row.getValue("orderNumber")}</div>,
+    },
+    {
+      id: "status",
+      header: "Estado",
+      enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <div className="flex items-center">
+                  <span
+                    className={`text-[16px] ${row.original.status === "Pagado"
+                      ? "text-green-500"
+                      : row.original.status === "Pendiente"
+                        ? "text-red-500"
+                        : ""
+                      }`}
+                  >
+                    {row.original.status}
+                  </span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => updateStatus(row.original.id, "Pagado")}>
+                  <span className="text-green-500">Pagado</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(row.original.id, "Pendiente")}>
+                  <span className="text-red-500">Pendiente</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )
+      },
+    },
+  ];
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+  };
 
   const table = useReactTable({
-    data,
+    data: orders.orders || [],
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    pageCount: -1,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    manualPagination: true,
     state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
       rowSelection,
+      pagination: { pageIndex, pageSize },
+      columnVisibility,
+    },
+    onPaginationChange: (updater) => {
+      const newPaginationState =
+        typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      handlePageChange(newPaginationState.pageIndex);
+      setPageSize(newPaginationState.pageSize);
     },
   });
 
+  console.log(orders.orders)
+
   return (
     <div className="flex flex-col">
-      <main className="grid flex-1 items-start gap-2 p-2 sm:px-6 sm:py-0 md:gap-6 -mt-4">
-        {/* tables */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Pedidos</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+      <main className="grid flex-1 items-start gap-2 p-2 sm:px-6 sm:py-0 md:gap-6">
         <div className="w-full">
-          <div className="flex justify-between">
+          <div className="flex justify-between flex-col-reverse lg:flex-row">
             <div className="flex items-center py-4 flex-grow">
               <Input
-                placeholder="Filter emails..."
-                value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn("email")?.setFilterValue(event.target.value)
-                }
-                className="w-full max-w-sm"
+                placeholder="Filtra por código de seguimiento..."
+                value={searchTerm}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  // Actualiza el filtro para la columna "orderNumber"
+                  table.getColumn("orderNumber")?.setFilterValue(event.target.value);
+                }}
+                className="w-full lg:max-w-sm"
               />
             </div>
             {/*col*/}
             <div className="flex items-center">
-              <div className="ml-auto flex items-center gap-2">
-                <Button size="sm" className="h-7 gap-1" onClick={() => router.push("/dashboard/categories/add")}>
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Agregar categoria
-                  </span>
-                </Button>
-              </div>
             </div>
           </div>
           <div className="rounded-md border">
@@ -266,45 +256,34 @@ export default function Orders() {
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        </TableHead>
-                      )
-                    })}
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows?.length ? (
+                {table.getRowModel().rows.length ? (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
+                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
+                    <TableCell colSpan={columns.length} className="text-center">
+                      No se encontraron categorías.
                     </TableCell>
                   </TableRow>
                 )}
@@ -313,8 +292,8 @@ export default function Orders() {
           </div>
           <div className="flex items-center justify-end space-x-2 py-4">
             <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{" "}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
+              {table.getFilteredSelectedRowModel().rows.length} de{" "}
+              {table.getFilteredRowModel().rows.length} fila(s) seleccionada(s).
             </div>
             <div className="space-x-2">
               <Button
@@ -323,15 +302,15 @@ export default function Orders() {
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                Previous
+                Atrás
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                disabled={pageIndex + 1 >= totalPages}
               >
-                Next
+                Siguiente
               </Button>
             </div>
           </div>
@@ -339,4 +318,4 @@ export default function Orders() {
       </main>
     </div>
   );
-};
+}

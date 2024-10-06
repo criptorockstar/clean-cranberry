@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "@/store/store";
 
 interface Category {
   id: number;
@@ -8,19 +9,15 @@ interface Category {
 }
 
 interface CategoryState {
-  categories: [];
-  filteredCategory: Category | null;
-  allCategories: Category[];
-  currentPage: number;
+  categories: Category[];
   totalPages: number;
+  currentPage: number;
 }
 
 const initialState: CategoryState = {
   categories: [],
-  filteredCategory: null,
-  allCategories: [],
+  totalPages: 0,
   currentPage: 1,
-  totalPages: 1,
 };
 
 const categorySlice = createSlice({
@@ -31,26 +28,19 @@ const categorySlice = createSlice({
       state,
       action: PayloadAction<{
         categories: Category[];
-        currentPage: number;
         totalPages: number;
+        currentPage: number;
       }>,
     ) {
       state.categories = action.payload.categories;
-      state.currentPage = action.payload.currentPage;
       state.totalPages = action.payload.totalPages;
-    },
-    setFilteredCategory(state, action: PayloadAction<Category | null>) {
-      state.filteredCategory = action.payload;
+      state.currentPage = action.payload.currentPage;
     },
     addCategory(state, action: PayloadAction<Category>) {
       state.categories.push(action.payload);
-      state.allCategories.push(action.payload);
     },
     deleteCategory(state, action: PayloadAction<number>) {
       state.categories = state.categories.filter(
-        (category) => category.id !== action.payload,
-      );
-      state.allCategories = state.allCategories.filter(
         (category) => category.id !== action.payload,
       );
     },
@@ -70,34 +60,22 @@ const categorySlice = createSlice({
         state.categories[categoryIndex].name = action.payload.name;
         state.categories[categoryIndex].image = action.payload.image;
         state.categories[categoryIndex].slug = action.payload.slug;
-
-        const allCategoryIndex = state.allCategories.findIndex(
-          (category) => category.id === action.payload.id,
-        );
-        if (allCategoryIndex >= 0) {
-          state.allCategories[allCategoryIndex].name = action.payload.name;
-          state.allCategories[allCategoryIndex].image = action.payload.image;
-          state.allCategories[allCategoryIndex].slug = action.payload.slug;
-        }
       }
-    },
-    setPage(state, action: PayloadAction<number>) {
-      state.currentPage = action.payload;
-    },
-    setTotalPages(state, action: PayloadAction<number>) {
-      state.totalPages = action.payload;
     },
   },
 });
 
-export const {
-  setCategories,
-  setFilteredCategory,
-  addCategory,
-  deleteCategory,
-  updateCategory,
-  setPage,
-  setTotalPages,
-} = categorySlice.actions;
+export const selectCategoryBySlug = (state: RootState, slug: string) =>
+  state.categories.categories.find(
+    (category: Category) => category.slug === slug,
+  );
+
+export const selectTotalPages = (state: RootState) =>
+  state.categories.totalPages;
+export const selectCurrentPage = (state: RootState) =>
+  state.categories.currentPage;
+
+export const { setCategories, addCategory, deleteCategory, updateCategory } =
+  categorySlice.actions;
 
 export const categoryReducer = categorySlice.reducer;

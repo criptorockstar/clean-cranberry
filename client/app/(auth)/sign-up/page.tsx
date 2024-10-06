@@ -114,6 +114,7 @@ export default function SignUpPage() {
                     <FormItem>
                       <FormControl>
                         <Input
+                          username={true}
                           placeholder="Nombre de usuario"
                           className={`bg-slate-50 dark:bg-slate-500 py-5 focus-visible:ring-0 outline-none ${fieldState.error ? "border-red-500" : ""}`}
                           autoComplete="off"

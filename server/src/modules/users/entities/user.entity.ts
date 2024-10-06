@@ -6,10 +6,12 @@ import {
   PrimaryGeneratedColumn,
   Timestamp,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 import { CartEntity } from 'src/modules/cart/entities/cart.entity';
 import { OrderEntity } from 'src/modules/orders/entities/order.entity';
 import { Roles } from 'src/common/enums';
+import { ShippingEntity } from './shipping.entity';
 
 @Entity('users')
 export class UserEntity {
@@ -34,6 +36,11 @@ export class UserEntity {
     default: Roles.USER,
   })
   roles: Roles;
+
+  @OneToOne(() => ShippingEntity, (shipping) => shipping.user, {
+    cascade: true,
+  })
+  shipping: ShippingEntity;
 
   @OneToMany(() => CartEntity, (cart) => cart.user)
   carts: CartEntity[];

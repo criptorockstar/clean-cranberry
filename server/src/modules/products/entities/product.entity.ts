@@ -48,7 +48,7 @@ export class ProductEntity {
   @Column({ default: false })
   featured: boolean;
 
-  @ManyToMany(() => Color, (color) => color.products)
+  @ManyToMany(() => Color, (color) => color.products, { cascade: true })
   @JoinTable({
     name: 'product_colors',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },
@@ -56,7 +56,7 @@ export class ProductEntity {
   })
   colors: Color[];
 
-  @ManyToMany(() => Size, (size) => size.products)
+  @ManyToMany(() => Size, (size) => size.products, { cascade: true })
   @JoinTable({
     name: 'product_sizes',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },
@@ -64,7 +64,9 @@ export class ProductEntity {
   })
   sizes: Size[];
 
-  @ManyToMany(() => Category, (category) => category.products)
+  @ManyToMany(() => Category, (category) => category.products, {
+    cascade: true,
+  })
   @JoinTable({
     name: 'product_categories',
     joinColumn: { name: 'product_id', referencedColumnName: 'id' },
@@ -72,7 +74,7 @@ export class ProductEntity {
   })
   categories: Category[];
 
-  @OneToMany(() => ProductImage, (image) => image.product)
+  @OneToMany(() => ProductImage, (image) => image.product, { cascade: true })
   images: ProductImage[];
 
   @CreateDateColumn()

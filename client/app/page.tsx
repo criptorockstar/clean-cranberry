@@ -21,11 +21,11 @@ export default function HomePage() {
         />
       </div>
 
-      <div className="container mx-auto mt-20 mb-6 overflow-hidden">
+      <div className="container mx-auto mt-16 pt-1 mb-6 overflow-hidden">
         <FeaturedCategories />
       </div>
 
-      <div className="container mx-auto mt-20 mb-20 overflow-hidden">
+      <div className="container mx-auto mt-1 pt-1 mb-20 overflow-hidden">
         <FeaturedProducts />
       </div>
     </React.Fragment>

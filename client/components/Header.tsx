@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { HiOutlineShoppingBag, HiOutlineUser, HiOutlineLogout } from "react-icons/hi";
-import { MdDashboard, MdAccountBox } from "react-icons/md";
+import { MdDashboard } from "react-icons/md";
 import DrawerMenu from "./drawer-menu";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +24,6 @@ import { setItemCount } from "@/store/slices/cartSlice";
 export default function Header() {
   const user = useAppSelector((state: RootState) => state.user);
   const cartcount = useAppSelector((state: RootState) => state.cart.itemCount);
-  const router = useRouter();
   const dispatch = useAppDispatch();
 
   const { getCount } = useCart();
@@ -37,8 +35,10 @@ export default function Header() {
 
   React.useEffect(() => {
     const getCartItems = async () => {
-      const response = await getCount();
-      dispatch(setItemCount(response));
+      try {
+        const response = await getCount();
+        dispatch(setItemCount(response));
+      } catch (e: any) { }
     };
 
     getCartItems();

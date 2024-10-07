@@ -70,6 +70,7 @@ export default function OrderPage() {
     await setShipping(data);
     await setOrder();
     dispatch(cleanCart());
+    window.location.href = "/cart/checkout"
   };
 
   return (

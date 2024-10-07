@@ -68,7 +68,6 @@ export class CartService {
   ) {
     const cart = await this.findCartByUserId(userId);
     const item = cart.items.find((i) => i.id === Number(itemId));
-    console.log(item);
 
     if (item) {
       // Actualiza la cantidad
@@ -128,9 +127,11 @@ export class CartService {
       0,
     );
 
+    const shippingCost = 2500; // Costo de envío
+
     return {
       items: cart.items, // La estructura de `items` se mantiene
-      total,
+      total: total + shippingCost, // Sumar el costo de envío al total
     };
   }
 

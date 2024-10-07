@@ -6,7 +6,7 @@ import { MdOutlineWhatsapp, MdOutlinePayments } from "react-icons/md";
 export default function Footer() {
   return (
     <React.Fragment>
-      <div className="container mx-auto relative">
+      <div className="max-w-[1250px] mx-auto relative">
         <div
           className={`text-2xl font-semibold mx-4 -mb-6`}
         >

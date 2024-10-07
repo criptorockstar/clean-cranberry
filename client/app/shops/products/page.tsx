@@ -295,7 +295,7 @@ export default function ProductsPage() {
                                     <div className="flex items-center space-x-2">
                                       <Checkbox
                                         id={`category-${category.id}`}
-                                        checked={selectedCategories.includes(String(category.id))}
+                                        checked={selectedCategories.includes(category.id)}
                                         onCheckedChange={(isChecked: any) =>
                                           handleCategoryChange(category.id, isChecked)
                                         }

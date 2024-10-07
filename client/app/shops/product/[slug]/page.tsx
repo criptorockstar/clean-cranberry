@@ -17,12 +17,15 @@ import { usePathname } from "next/navigation";
 import { Input } from "@/components/input";
 import useCart from "@/hooks/useCart";
 import { setItemCount } from "@/store/slices/cartSlice";
+import { RootState } from "@/store/store";
 
 export default function ProductPage({ params }: any) {
   const { getProduct, getRelated, relatedProducts } = useProducts();
   const { addCart } = useCart();
   const dispatch = useAppDispatch();
   const pathname = usePathname();
+
+  const user = useAppSelector((state: RootState) => state.user);
 
   useEffect(() => {
     dispatch(cleanProduct());
@@ -94,8 +97,13 @@ export default function ProductPage({ params }: any) {
 
 
   // ADD ITEM CART
-  const { getCount, getCart } = useCart();
+  const { getCount } = useCart();
+
   const handleCart = async () => {
+    if (!user.username) {
+      window.location.href = "/sign-in";
+    }
+
     if (productDetails.id && productDetails.size && productDetails.color && productDetails.quantity > 0) {
       await addCart(
         productDetails.id,
@@ -104,9 +112,8 @@ export default function ProductPage({ params }: any) {
         productDetails.color,
       );
 
-
-      const responseCart = await getCart();
-      console.log(responseCart)
+      //const responseCart = await getCart();
+      //console.log(responseCart)
 
       const response = await getCount();
       dispatch(setItemCount(response));

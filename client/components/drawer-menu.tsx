@@ -92,7 +92,7 @@ export default function DrawerMenu() {
                 <li
                   className={`relative flex items-center py-2 my-1 mt-0 font-medium rounded-md cursor-pointer transition-colors bg-gradient-to-r from-blue-500 to-indigo-500`}
                 >
-                  <div className="flex items-center w-full justify-center">
+                  <div className="flex items-center w-full justify-center" onClick={() => handleNavigation("/sign-in")}>
                     <span className="text-center text-white">Login</span>
                   </div>
                 </li>

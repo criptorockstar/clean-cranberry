@@ -6,7 +6,7 @@ export class SetShippingDto {
   address: string;
 
   @IsOptional()
-  @IsString()
+  @IsNumber()
   door?: number;
 
   @IsNotEmpty({ message: 'zip: El codigo postal es obligatorio' })

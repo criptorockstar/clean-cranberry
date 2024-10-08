@@ -6,11 +6,10 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  Timestamp,
   JoinColumn,
 } from 'typeorm';
 import { UserEntity } from '../../users/entities/user.entity';
-import { CartItemEntity } from '../../cart/entities/cart-item.entity';
+import { OrderItemsEntity } from './order-items.entity';
 import { OrderStatus } from 'src/common/enums';
 import { ShippingEntity } from 'src/modules/users/entities/shipping.entity';
 
@@ -35,18 +34,18 @@ export class OrderEntity {
   @ManyToOne(() => UserEntity, (user) => user.orders)
   user: UserEntity;
 
-  @OneToMany(() => CartItemEntity, (cartItem) => cartItem.order, {
+  @OneToMany(() => OrderItemsEntity, (orderItem) => orderItem.order, {
     cascade: true,
   })
-  items: CartItemEntity[];
+  items: OrderItemsEntity[];
 
   @ManyToOne(() => ShippingEntity, { nullable: true })
   @JoinColumn()
   shippingAddress: ShippingEntity;
 
   @CreateDateColumn()
-  createdAt: Timestamp;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updatedAt: Timestamp;
+  updatedAt: Date;
 }

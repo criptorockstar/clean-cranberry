@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class Initial1728237204209 implements MigrationInterface {
-    name = 'Initial1728237204209'
+export class Initial1728409145493 implements MigrationInterface {
+    name = 'Initial1728409145493'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE \`colors\` (\`id\` int NOT NULL AUTO_INCREMENT, \`name\` varchar(255) NOT NULL, \`code\` varchar(255) NOT NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
@@ -9,6 +9,7 @@ export class Initial1728237204209 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE \`categories\` (\`id\` int NOT NULL AUTO_INCREMENT, \`name\` varchar(255) NOT NULL, \`slug\` varchar(255) NOT NULL, \`image\` varchar(255) NOT NULL, \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`product_images\` (\`id\` int NOT NULL AUTO_INCREMENT, \`url\` varchar(255) NOT NULL, \`productId\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`products\` (\`id\` int NOT NULL AUTO_INCREMENT, \`name\` varchar(255) NOT NULL, \`slug\` varchar(255) NOT NULL, \`description\` varchar(255) NOT NULL, \`quantity\` enum ('limitado', 'ilimitado') NOT NULL DEFAULT 'ilimitado', \`stock\` int NOT NULL, \`price\` int NOT NULL, \`offer\` int NOT NULL, \`featured\` tinyint NOT NULL DEFAULT 0, \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), UNIQUE INDEX \`IDX_4c9fb58de893725258746385e1\` (\`name\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        await queryRunner.query(`CREATE TABLE \`order_items\` (\`id\` int NOT NULL AUTO_INCREMENT, \`quantity\` int NOT NULL, \`price\` int NOT NULL, \`productId\` int NULL, \`orderId\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`shipping\` (\`id\` int NOT NULL AUTO_INCREMENT, \`address\` varchar(255) NOT NULL, \`door\` int NULL, \`zip\` varchar(255) NOT NULL, \`phone\` varchar(255) NOT NULL, \`userId\` int NULL, UNIQUE INDEX \`REL_14f0a9c4cfa1f66bb85f84cc6c\` (\`userId\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`orders\` (\`id\` int NOT NULL AUTO_INCREMENT, \`orderNumber\` varchar(255) NOT NULL, \`total\` int NOT NULL, \`status\` enum ('Pendiente', 'Pagado') NOT NULL DEFAULT 'Pendiente', \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`userId\` int NULL, \`shippingAddressId\` int NULL, UNIQUE INDEX \`IDX_59b0c3b34ea0fa5562342f2414\` (\`orderNumber\`), PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`cart_items\` (\`id\` int NOT NULL AUTO_INCREMENT, \`quantity\` int NOT NULL, \`size\` int NOT NULL, \`color\` int NOT NULL, \`cartId\` int NULL, \`productId\` int NULL, \`orderId\` int NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
@@ -18,6 +19,8 @@ export class Initial1728237204209 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE \`product_sizes\` (\`product_id\` int NOT NULL, \`size_id\` int NOT NULL, INDEX \`IDX_b6d94a689dd115cdf01589b961\` (\`product_id\`), INDEX \`IDX_b77c486737027396bcfdc0897b\` (\`size_id\`), PRIMARY KEY (\`product_id\`, \`size_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`CREATE TABLE \`product_categories\` (\`product_id\` int NOT NULL, \`category_id\` int NOT NULL, INDEX \`IDX_8748b4a0e8de6d266f2bbc877f\` (\`product_id\`), INDEX \`IDX_9148da8f26fc248e77a387e311\` (\`category_id\`), PRIMARY KEY (\`product_id\`, \`category_id\`)) ENGINE=InnoDB`);
         await queryRunner.query(`ALTER TABLE \`product_images\` ADD CONSTRAINT \`FK_b367708bf720c8dd62fc6833161\` FOREIGN KEY (\`productId\`) REFERENCES \`products\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`order_items\` ADD CONSTRAINT \`FK_cdb99c05982d5191ac8465ac010\` FOREIGN KEY (\`productId\`) REFERENCES \`products\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`order_items\` ADD CONSTRAINT \`FK_f1d359a55923bb45b057fbdab0d\` FOREIGN KEY (\`orderId\`) REFERENCES \`orders\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`shipping\` ADD CONSTRAINT \`FK_14f0a9c4cfa1f66bb85f84cc6c3\` FOREIGN KEY (\`userId\`) REFERENCES \`users\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`orders\` ADD CONSTRAINT \`FK_151b79a83ba240b0cb31b2302d1\` FOREIGN KEY (\`userId\`) REFERENCES \`users\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`orders\` ADD CONSTRAINT \`FK_cc4e4adab232e8c05026b2f345d\` FOREIGN KEY (\`shippingAddressId\`) REFERENCES \`shipping\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
@@ -47,6 +50,8 @@ export class Initial1728237204209 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`orders\` DROP FOREIGN KEY \`FK_cc4e4adab232e8c05026b2f345d\``);
         await queryRunner.query(`ALTER TABLE \`orders\` DROP FOREIGN KEY \`FK_151b79a83ba240b0cb31b2302d1\``);
         await queryRunner.query(`ALTER TABLE \`shipping\` DROP FOREIGN KEY \`FK_14f0a9c4cfa1f66bb85f84cc6c3\``);
+        await queryRunner.query(`ALTER TABLE \`order_items\` DROP FOREIGN KEY \`FK_f1d359a55923bb45b057fbdab0d\``);
+        await queryRunner.query(`ALTER TABLE \`order_items\` DROP FOREIGN KEY \`FK_cdb99c05982d5191ac8465ac010\``);
         await queryRunner.query(`ALTER TABLE \`product_images\` DROP FOREIGN KEY \`FK_b367708bf720c8dd62fc6833161\``);
         await queryRunner.query(`DROP INDEX \`IDX_9148da8f26fc248e77a387e311\` ON \`product_categories\``);
         await queryRunner.query(`DROP INDEX \`IDX_8748b4a0e8de6d266f2bbc877f\` ON \`product_categories\``);
@@ -66,6 +71,7 @@ export class Initial1728237204209 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE \`orders\``);
         await queryRunner.query(`DROP INDEX \`REL_14f0a9c4cfa1f66bb85f84cc6c\` ON \`shipping\``);
         await queryRunner.query(`DROP TABLE \`shipping\``);
+        await queryRunner.query(`DROP TABLE \`order_items\``);
         await queryRunner.query(`DROP INDEX \`IDX_4c9fb58de893725258746385e1\` ON \`products\``);
         await queryRunner.query(`DROP TABLE \`products\``);
         await queryRunner.query(`DROP TABLE \`product_images\``);

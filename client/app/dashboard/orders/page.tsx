@@ -10,9 +10,6 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  DotsHorizontalIcon,
-} from "@radix-ui/react-icons"
 import { useMediaQuery } from "@/components/use-media-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +31,6 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -136,7 +132,7 @@ export default function Orders() {
   const updateStatus = async (id: number, data: any) => {
     await updateOrder(id, data)
     dispatch(setOrderStatus({ id: id, status: data }));
-  }
+  };
 
   const columns: ColumnDef<any>[] = [
     {
@@ -152,7 +148,15 @@ export default function Orders() {
     {
       accessorKey: "orderNumber",
       header: "Código de seguimiento",
-      cell: ({ row }) => <div className="lowercase">{row.getValue("orderNumber")}</div>,
+      cell: ({ row }) => {
+        return (
+          <div
+            className="lowercase cursor-pointer"
+            onClick={() => window.location.href = `/dashboard/orders/order/${row.original.orderNumber}`}>
+            {row.original.orderNumber}
+          </div>
+        )
+      },
     },
     {
       id: "status",
@@ -224,7 +228,7 @@ export default function Orders() {
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            <BreadcrumbPage>Dashboard</BreadcrumbPage>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -283,7 +287,7 @@ export default function Orders() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="text-center">
-                      No se encontraron categorías.
+                      No se encontraron pedidos.
                     </TableCell>
                   </TableRow>
                 )}

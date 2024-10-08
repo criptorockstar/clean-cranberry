@@ -34,7 +34,14 @@ export class OrdersController {
     return this.ordersService.getOrder(currentUser.id);
   }
 
+  // GET ORDER BY ORDER NUMBER
+  @Get('/order/:order')
+  async getOrderByNumber(@Param('order') orderNumber: string) {
+    return this.ordersService.getOrderByNumber(orderNumber);
+  }
+
   // UPDATE ORDER
+  @UseGuards(AuthenticationGuard)
   @Put('/update/:id')
   async updateOrder(
     @Param('id') id: number,

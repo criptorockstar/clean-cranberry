@@ -43,3 +43,9 @@ export const updateOrderService = async (id: number, data: any) => {
   const response = await axios.put(`/orders/update/${id}`, data);
   return response.data;
 };
+
+// GET ORDER BY Order Number
+export const getOrderByNumberService = async (order: string) => {
+  const response = await axios.get(`/orders/order/${order}`);
+  return response.data;
+};

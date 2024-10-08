@@ -1,4 +1,4 @@
-"use client";
+Pageuse client";
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -367,7 +367,7 @@ export default function EditProduct({ params }: any) {
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              <BreadcrumbPage>Dashboard</BreadcrumbPage>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>

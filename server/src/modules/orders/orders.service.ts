@@ -18,6 +18,7 @@ import { UserEntity } from '../users/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Quantities } from 'src/common/enums';
 import { OrderStatus } from 'src/common/enums';
+import { OrderItemsEntity } from './entities/order-items.entity'; // Asegúrate de importar la entidad
 
 @Injectable()
 export class OrdersService {
@@ -42,6 +43,33 @@ export class OrdersService {
     private readonly shippingRepository: Repository<ShippingEntity>,
     private readonly mailerService: MailerService,
   ) {}
+
+  // GET ORDER BY ORDER NUMBER
+  async getOrderByNumber(orderNumber: string): Promise<OrderEntity> {
+    const shippingCost = 2500;
+
+    const order = await this.orderRepository.findOne({
+      where: { orderNumber },
+      relations: [
+        'items',
+        'items.product',
+        'items.product.images',
+        'user',
+        'shippingAddress',
+      ],
+    });
+
+    if (!order) {
+      throw new NotFoundException(
+        `No se encontró una orden con el número: ${orderNumber}`,
+      );
+    }
+
+    // Sumar el costo de envío al total de la orden
+    order.total += shippingCost;
+
+    return order;
+  }
 
   async setOrder(userId: number): Promise<OrderEntity> {
     // Obtener el carrito del usuario
@@ -74,10 +102,21 @@ export class OrdersService {
       orderNumber,
       total,
       user: { id: userId },
-      items: cart.items,
       shippingAddress,
       status: OrderStatus.PENDING,
     });
+
+    // Crear los ítems de la orden a partir de los ítems del carrito
+    const orderItems = cart.items.map((cartItem) => {
+      const orderItem = new OrderItemsEntity();
+      orderItem.product = cartItem.product;
+      orderItem.quantity = cartItem.quantity;
+      orderItem.price = cartItem.product.price;
+      return orderItem;
+    });
+
+    // Asignar los ítems a la orden
+    order.items = orderItems;
 
     // Guardar la orden en la base de datos
     const savedOrder = await this.orderRepository.save(order);
@@ -87,19 +126,19 @@ export class OrdersService {
 
     // (Opcional) Enviar un correo de confirmación de la orden
     /*try {
-      await this.mailerService.sendMail({
-        to: cart.user.email,
-        subject: `Confirmación de pedido #${savedOrder.orderNumber}`,
-        template: './order-confirmation', // Suponiendo que tienes una plantilla
-        context: {
-          orderNumber: savedOrder.orderNumber,
-          total: savedOrder.total,
-          userName: cart.user.name,
-        },
-      });
-    } catch (error) {
-      console.error('Error al enviar el correo de confirmación', error);
-    }*/
+    await this.mailerService.sendMail({
+      to: cart.user.email,
+      subject: `Confirmación de pedido #${savedOrder.orderNumber}`,
+      template: './order-confirmation', // Suponiendo que tienes una plantilla
+      context: {
+        orderNumber: savedOrder.orderNumber,
+        total: savedOrder.total,
+        userName: cart.user.name,
+      },
+    });
+  } catch (error) {
+    console.error('Error al enviar el correo de confirmación', error);
+  }*/
 
     return savedOrder;
   }
@@ -182,6 +221,8 @@ export class OrdersService {
 
   // GET PAGINATED ORDERS WITH SEARCH
   async getPaginated(page: number, limit: number, orderNumber?: string) {
+    const shippingCost = 2500;
+
     const query = this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.items', 'items')
@@ -199,8 +240,16 @@ export class OrdersService {
 
     const [orders, total] = await query.getManyAndCount();
 
+    // Añadir el costo de envío al total de cada orden
+    const updatedOrders = orders.map((order) => {
+      return {
+        ...order,
+        total: order.total + shippingCost, // Sumar el costo de envío
+      };
+    });
+
     return {
-      orders,
+      orders: updatedOrders,
       total,
       page,
       limit,

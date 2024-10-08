@@ -7,6 +7,7 @@ import {
   getOrderService,
   getPaginatedOrderService,
   updateOrderService,
+  getOrderByNumberService,
 } from "@/services/order";
 import { setOrders } from "@/store/slices/orderSlice";
 import { RootState } from "@/store/store";
@@ -114,6 +115,22 @@ const useOrder = () => {
     }
   };
 
+  // GET ORDER BY Order Number
+  const getOrderByNumber = async (order: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getOrderByNumberService(order);
+      return response;
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An error occurred");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     getShipping,
     setShipping,
@@ -121,6 +138,7 @@ const useOrder = () => {
     getOrder,
     getPaginatedOrders,
     updateOrder,
+    getOrderByNumber,
     totalPages,
     currentPage,
     orders,

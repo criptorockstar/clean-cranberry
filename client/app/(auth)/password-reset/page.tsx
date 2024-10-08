@@ -7,7 +7,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormMessage, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 const formSchema = z.object({
   password: z.string()

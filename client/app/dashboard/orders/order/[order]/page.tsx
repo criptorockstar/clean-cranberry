@@ -237,9 +237,9 @@ export default function OrderPage({ params }: any) {
               <DropdownMenuTrigger>
                 <div className="flex items-center">
                   <span
-                    className={`text-[16px] ${order.status === "Pagado"
+                    className={`text-[16px] ${order.status === "Pagado" || order.status === "Enviado"
                       ? "text-green-500"
-                      : order.status === "Pendiente"
+                      : order.status === "Pendiente" || order.status === "Rechazado"
                         ? "text-red-500"
                         : ""
                       }`}

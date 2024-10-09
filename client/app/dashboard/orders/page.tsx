@@ -169,9 +169,9 @@ export default function Orders() {
               <DropdownMenuTrigger>
                 <div className="flex items-center">
                   <span
-                    className={`text-[16px] ${row.original.status === "Pagado"
+                    className={`text-[16px] ${row.original.status === "Pagado" || row.original.status === "Enviado"
                       ? "text-green-500"
-                      : row.original.status === "Pendiente"
+                      : row.original.status === "Pendiente" || row.original.status === "Rechazado"
                         ? "text-red-500"
                         : ""
                       }`}
@@ -186,6 +186,12 @@ export default function Orders() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => updateStatus(row.original.id, "Pendiente")}>
                   <span className="text-red-500">Pendiente</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(row.original.id, "Enviado")}>
+                  <span className="text-green-500">Enviado</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateStatus(row.original.id, "Rechazado")}>
+                  <span className="text-red-500">Rechazado</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

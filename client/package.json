@@ -36,7 +36,6 @@
     "input-otp": "^1.2.4",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.441.0",
-    "material-table": "^2.0.6",
     "next": "14.2.12",
     "qrcode.react": "^4.0.1",
     "react": "^18",

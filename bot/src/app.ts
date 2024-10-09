@@ -9,6 +9,7 @@ import {
 import { MemoryDB as Database } from "@builderbot/bot";
 import { BaileysProvider as Provider } from "@builderbot/provider-baileys";
 import mysql from "mysql2/promise";
+import { RowDataPacket } from "mysql2";
 import express from "express"; // Importar express
 import fs from "fs"; // Importar fs
 
@@ -127,15 +128,35 @@ const handleSelectionFlow = addKeyword([
           "Tu pedido será despachado dentro de las 72hs de haber realizado tu pago!\nPodés ver tu guía en nuestra web\nIngresa a www.cranberrymayorista.com\nO nos estaremos comunicando para enviarte tu guía!";
         break;
       case "13": {
+        interface Order {
+          id: number;
+          orderNumber: string;
+          total: number;
+          status: string;
+          createdAt: string;
+          updatedAt: string;
+          shippingAddress: {
+            id: number;
+            address: string;
+            door: string | null;
+            zip: string;
+            phone: string;
+          };
+          items: Array<{}>;
+          user: {
+            id: number;
+          };
+        }
+
         const orderNumber = ctx.body.trim().toUpperCase();
-        const [rows] = await db.query(
+        const [rows] = await db.query<RowDataPacket[]>(
           "SELECT * FROM orders WHERE orderNumber = ?",
           [orderNumber],
         );
 
         if (Array.isArray(rows) && rows.length > 0) {
           const order = rows[0]; // Suponiendo que el número de pedido es único
-          responseMessage = `Estado de tu pedido *${orderNumber}*:\n\n- Estado:`;
+          responseMessage = `Estado de tu pedido *${orderNumber}*:\n\n- Estado: ${order.status}`;
         } else {
           responseMessage = `No se encontró ningún pedido con el número *${orderNumber}*. Verifica el número de pedido e inténtalo de nuevo.`;
         }
